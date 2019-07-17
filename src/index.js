@@ -59,22 +59,26 @@ const myComments = [
     {
         id: "1123",
         text: "ShahzComi",
-        author: "1"
+        author: "1",
+        postId:"1"
     },
     {
         id: "4322",
         text: "MaryComit",
-        author: "1"
+        author: "1",
+        postId:"2"
     },
     {
         id: "3342",
         text: "ScottCommit",
-        author: "1"
+        author: "1",
+        postId:"1"
     },
     {
         id: "5123",
         text:"brobrobroooooo",
-        author: "2"
+        author: "2",
+        postId:"3"
     }
 ]
 
@@ -83,9 +87,9 @@ const myComments = [
 const typeDefs = `
     type Query {
         users(query: String): [User!]!
-        myPosts(query: String): [Post!]!
+        posts(query: String): [Post!]!
         me: User!
-        posts: Post!
+        post: Post!
         comments: [Comment!]!
     }
     type User {
@@ -102,11 +106,13 @@ const typeDefs = `
         body: String!
         published: String
         author: User!
+        comments: [Comment!]
     }
     type Comment {
         id: ID!
         text: String!
         author: User!
+        post: Post!
     }
 `
 
@@ -124,7 +130,7 @@ const resolvers = {
                 age: null
             }
         },
-        myPosts(parent, args, crx, info) {
+        posts(parent, args, crx, info) {
             if (!args.query) {
                 return myPosts
             }
@@ -140,8 +146,6 @@ const resolvers = {
     },
     User: {
         posts(parent, args, crx, info) {
-            console.log(myPosts);
-
             return myPosts.filter((post) =>{
                 return post.author === parent.id
             })
@@ -157,6 +161,11 @@ const resolvers = {
             return users.find((user) => {
                 return user.id === parent.author
             })
+        },
+        comments(parent, args, crx, info) {
+            return myComments.filter((comment) => {
+                return comment.postId === parent.id
+            })
         }
     },
     Comment: {
@@ -164,7 +173,13 @@ const resolvers = {
           return users.find((user) => {
             return user.id === parent.author
           })
-        }
+        },
+        post(parent, args, crx, info) {
+
+          return myPosts.find((post) => {
+            return post.id  === parent.postId
+          })
+        },
     }
 
 }

@@ -1,5 +1,5 @@
 import { GraphQLServer } from 'graphql-yoga'
-
+import uuidv4 from 'uuid/v4';
 
 //String, Boolean, Int, Float, ID
 // 5 Scaler Types
@@ -37,7 +37,7 @@ const myPosts = [{
     title: "Post #1",
     body: "shaz@aol.com",
     published: true,
-    author: "1"
+    author: "1",
   },
   {
     id: "2",
@@ -92,6 +92,11 @@ const typeDefs = `
         post: Post!
         comments: [Comment!]!
     }
+    type Mutation {
+        createUser(name: String!, email: String!, age: Int): User!
+        createPost(title: String!, body: String!, published: Boolean!, author: ID!): Post!
+        createComment(text: String!, author: ID!, post:ID!): Comment!
+    }
     type User {
         id: ID!
         name: String!
@@ -114,6 +119,7 @@ const typeDefs = `
         author: User!
         post: Post!
     }
+
 `
 
 // Resolvers
@@ -142,6 +148,63 @@ const resolvers = {
         },
         comments(parent, args, crx, info) {
             return myComments
+        }
+    },
+    Mutation: {
+        createUser(parents, args, crx, info) {
+            const emailTaken = users.some((user) => user.email === args.email)
+
+            if(emailTaken) {
+                throw new Error('Email Taken')
+            }
+
+            const user = {
+                id: uuidv4(),
+                name: args.name,
+                email: args.email,
+                age: args.age,
+            }
+
+            users.push(user)
+
+            return user
+        },
+        createPost(parents, args, ctx, info) {
+            const userExists = users.some((user) => user.id === args.author)
+
+            if(!userExists) {
+                throw new Error("User not found")
+            }
+            const post = {
+                id: uuidv4(),
+                title: args.title,
+                body: args.body,
+                published: args.published,
+                author: args.author
+            }
+
+            myPosts.push(post)
+
+            return post
+        },
+        createComment(parents, args, ctx, info) {
+            const userExists = users.some((user) => user.id === args.author)
+            const postExists = myPosts.some((post) => post.id === args.post && post.published)
+
+            if (!userExists || !postExists) {
+              throw new Error("User not found or Post not found/published")
+            }
+
+            const comment = {
+                id: uuidv4(),
+                text: args.text,
+                author: args.author,
+                postId: args.post
+            }
+
+            myComments.push(comment);
+
+            return comment
         }
     },
     User: {

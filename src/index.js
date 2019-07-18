@@ -93,10 +93,30 @@ const typeDefs = `
         comments: [Comment!]!
     }
     type Mutation {
-        createUser(name: String!, email: String!, age: Int): User!
-        createPost(title: String!, body: String!, published: Boolean!, author: ID!): Post!
-        createComment(text: String!, author: ID!, post:ID!): Comment!
+        createUser(data: CreateUserInput!): User!
+        createPost(data: CreatePostInput!): Post!
+        createComment(data: CreateCommentInput!): Comment!
     }
+
+    input CreateUserInput {
+        name: String!
+        email: String!
+        age: Int
+    }
+
+    input CreatePostInput {
+        title: String!
+        body: String!
+        published: Boolean!
+        author: ID!
+    }
+
+    input CreateCommentInput {
+        text: String!
+        author: ID!
+        post: ID!
+    }
+
     type User {
         id: ID!
         name: String!
@@ -152,7 +172,7 @@ const resolvers = {
     },
     Mutation: {
         createUser(parents, args, crx, info) {
-            const emailTaken = users.some((user) => user.email === args.email)
+            const emailTaken = users.some((user) => user.email === args.data.email)
 
             if(emailTaken) {
                 throw new Error('Email Taken')
@@ -160,9 +180,7 @@ const resolvers = {
 
             const user = {
                 id: uuidv4(),
-                name: args.name,
-                email: args.email,
-                age: args.age,
+                ...args.data
             }
 
             users.push(user)
@@ -170,17 +188,14 @@ const resolvers = {
             return user
         },
         createPost(parents, args, ctx, info) {
-            const userExists = users.some((user) => user.id === args.author)
+            const userExists = users.some((user) => user.id === args.data.author)
 
             if(!userExists) {
                 throw new Error("User not found")
             }
             const post = {
                 id: uuidv4(),
-                title: args.title,
-                body: args.body,
-                published: args.published,
-                author: args.author
+                ...args.data
             }
 
             myPosts.push(post)
@@ -188,18 +203,18 @@ const resolvers = {
             return post
         },
         createComment(parents, args, ctx, info) {
-            const userExists = users.some((user) => user.id === args.author)
-            const postExists = myPosts.some((post) => post.id === args.post && post.published)
+            console.log(...args);
+
+            const userExists = users.some((user) => user.id === args.data.author)
+            const postExists = myPosts.some((post) => post.id === args.data.post && post.published)
 
             if (!userExists || !postExists) {
-              throw new Error("User not found or Post not found/published")
+              throw new Error('Unable to find user and post')
             }
 
             const comment = {
                 id: uuidv4(),
-                text: args.text,
-                author: args.author,
-                postId: args.post
+                ...args.data
             }
 
             myComments.push(comment);

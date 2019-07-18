@@ -15,7 +15,4 @@ const User = {
   }
 }
 
-export {
-  User as
-  default
-}
+  export { User as default }

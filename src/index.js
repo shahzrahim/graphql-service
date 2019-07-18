@@ -6,6 +6,8 @@ import Mutation from './resolvers/Mutation';
 import Post from './resolvers/Post';
 import User from './resolvers/User';
 import Comment from './resolvers/Comment';
+
+//Bootstrap application
 // Resolvers
 const resolvers = {
     Query,
@@ -17,7 +19,13 @@ const resolvers = {
 
 const server = new GraphQLServer({
     typeDefs: './src/schema.graphql',
-    resolvers,
+    resolvers: {
+      Query,
+      Mutation,
+      Post,
+      User,
+      Comment
+    },
     context: {
         db
     }

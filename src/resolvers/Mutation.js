@@ -15,6 +15,20 @@ const Mutation = {
 
             return user
         },
+
+        updateUser(parents,args, { db }, info) {
+            const { id, data } = args
+            const user = db.users.find((user) => user.id === id)
+
+            if (!user) {
+                throw new Error('User Not Found')
+            }
+
+            if(typeof data.email === 'string') {
+
+            }
+        },
+
         deleteUser(parent, args, { db }, info) {
             const userIndex = db.users.findIndex((user) => user.id === args.id)
 
@@ -37,6 +51,7 @@ const Mutation = {
 
             return deletedUsers[0]
         },
+
         createPost(parent, args, { db }, info) {
             const userExists = db.users.some((user) => user.id === args.data.author)
 
@@ -53,6 +68,7 @@ const Mutation = {
 
             return post
         },
+
         deletePost(parent, args, { db }, info) {
             const postIndex = db.posts.findIndex((post) => post.id === args.id)
 
@@ -66,6 +82,7 @@ const Mutation = {
 
             return deletedPosts[0]
         },
+
         createComment(parent, args, { db }, info){
             const userExists = db.users.some((user) => user.id === args.data.author)
             const postExists = db.posts.some((post) => post.id === args.data.post && post.published)
@@ -83,6 +100,7 @@ const Mutation = {
 
             return comment
         },
+
         deleteComment(parent, args, { db }, info) {
             const commentIndex = db.comments.findIndex((comment) => comment.id === args.id)
 

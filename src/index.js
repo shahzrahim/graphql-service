@@ -9,7 +9,7 @@ import uuidv4 from 'uuid/v4';
 
 
 // Demo User Data
-const users = [
+let users = [
     {
         id: "1",
         name: "Shahzi",
@@ -32,7 +32,7 @@ const users = [
     }
 ]
 
-const myPosts = [{
+let myPosts = [{
     id: "1",
     title: "Post #1",
     body: "shaz@aol.com",
@@ -55,7 +55,7 @@ const myPosts = [{
   }
 ]
 
-const myComments = [
+let myComments = [
     {
         id: "1123",
         text: "ShahzComi",
@@ -94,6 +94,7 @@ const typeDefs = `
     }
     type Mutation {
         createUser(data: CreateUserInput!): User!
+        deleteUser(id: ID!): User!
         createPost(data: CreatePostInput!): Post!
         createComment(data: CreateCommentInput!): Comment!
     }
@@ -186,6 +187,28 @@ const resolvers = {
             users.push(user)
 
             return user
+        },
+        deleteUser(parents, args, ctx, info) {
+            const userIndex = users.findIndex((user) => user.id === args.id)
+
+            if (userIndex === -1) {
+                throw new Error("User does not exist")
+            }
+
+            const updatedUsers = users.splice(userIndex, 1)
+
+            myPosts = myPosts.filter((post) => {
+                const match = post.author === args.id
+
+                if(!match) {
+                    myComments = myComments.filter((comment) => comment.post !== post.id)
+                }
+
+                return !match
+            })
+
+            myComments = myComments.filter((comment) => comment.author !== args.id)
+            return updatedUsers[0]
         },
         createPost(parents, args, ctx, info) {
             const userExists = users.some((user) => user.id === args.data.author)

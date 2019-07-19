@@ -67,7 +67,7 @@ const Mutation = {
 
         return user
     },
-    createPost(parent, args, { db }, info) {
+    createPost(parent, args, { db, pubsub }, info) {
         const userExists = db.users.some((user) => user.id === args.data.author)
 
         if (!userExists) {
@@ -80,6 +80,11 @@ const Mutation = {
         }
 
         db.posts.push(post)
+
+        if(post.published) {
+            pubsub.publish(`post`, { post })
+        }
+
 
         return post
     },
@@ -121,9 +126,9 @@ const Mutation = {
 
         return post;
     },
-    createComment(parent, args, { db }, info) {
-        const userExists = db.users.some((user) => user.id === args.data.author)
-        const postExists = db.posts.some((post) => post.id === args.data.post && post.published)
+    createComment(parent, { data }, { db, pubsub }, info) {
+        const userExists = db.users.some((user) => user.id === data.author)
+        const postExists = db.posts.some((post) => post.id === data.post && post.published)
 
         if (!userExists || !postExists) {
             throw new Error('Unable to find user and post')
@@ -131,10 +136,12 @@ const Mutation = {
 
         const comment = {
             id: uuidv4(),
-            ...args.data
+            ...data
         }
 
         db.comments.push(comment)
+
+        pubsub.publish(`comment ${data.post}`, { comment })
 
         return comment
     },
@@ -151,7 +158,13 @@ const Mutation = {
     },
     updateComment(parents, args, { db }, info) {
         const { id, data } = args
+        console.log(args.id);
+        console.log(db.comments[0].id);
+
+
         const comment = db.comments.find((comment) => comment.id === id)
+
+
 
         if (!comment) {
             throw new Error("Comment does not exist")
